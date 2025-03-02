@@ -1,0 +1,40 @@
+{
+  "824": {
+    "name": "Daily",
+    "rpc": "https://rpc.mainnet.dailycrypto.net/",
+    "chainId": 824,
+    "explorer": "https://explorer.mainnet.dailycrypto.net/block/",
+    "color": "#CC9B00",
+    "storage": "0xfe6c38F7047529da6cD6B1ef960C6f2F46D8282b",
+    "multicall": "0x922F38Ac06d11bEa414a9Ef91923c8A196f6A7f5",
+    "baseCurrency": {
+      "decimals": 18,
+      "name": "Daily",
+      "symbol": "DLY"
+    },
+    "wrappedToken": {
+      "address": "0x2E631e360e4d0f1EfD842BAe8314f192EB756f1C",
+      "name": "Wrapped DLY",
+      "symbol": "WDLY"
+    }
+  },
+  "825": {
+    "name": "Daily Testnet",
+    "rpc": "https://rpc.testnet.dailycrypto.net/",
+    "chainId": 825,
+    "explorer": "https://explorer.testnet.dailycrypto.net/block/",
+    "color": "#CC9B00",
+    "storage": "0x0cffcB7515E2A9a7dA7EacA5168F23D7e506C903",
+    "multicall": "0xe6009E981Ec7eF19898Fb9A2Edd89fcEA549E4ea",
+    "baseCurrency": {
+      "decimals": 18,
+      "name": "Daily Testnet",
+      "symbol": "TDLY"
+    },
+    "wrappedToken": {
+      "address": "0x7f1C93e5017E7EB3b0C5eb1504909Ed612AB4831",
+      "name": "Wrapped DLY",
+      "symbol": "WDLY"
+    }
+  }
+}

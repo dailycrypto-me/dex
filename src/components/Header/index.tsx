@@ -1,23 +1,29 @@
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
-import React from 'react'
-import { NavLink } from 'react-router-dom'
-import styled from 'styled-components'
-import { useTranslation } from 'react-i18next'
-import TempLogo from 'assets/images/templogo.png'
-import { RiArrowRightUpLine } from 'react-icons/ri'
-import { useActiveWeb3React } from 'hooks'
-import { useAppState } from 'state/application/hooks'
-import Menu from '../Menu'
-import { LightCard } from '../Card'
-import { CURRENCY } from 'assets/images'
-import Row, { RowFixed } from '../Row'
-import Web3Status from '../Web3Status'
-import networks from 'networks.json'
+import { ChainId } from '@uniswap/sdk';
+import React from 'react';
+import { Text } from 'rebass';
+import { NavLink } from 'react-router-dom';
+import { darken } from 'polished';
+import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
 
-const HeaderFrame = styled.header`
+//import Logo from '../../assets/svg/logo.svg';
+//import LogoDark from '../../assets/svg/logo_white.svg';
+import Logo from '../../assets/images/daily.png';
+import LogoDark from '../../assets/images/daily.png';
+import { useActiveWeb3React } from '../../hooks';
+import { useDarkModeManager } from '../../state/user/hooks';
+import { useETHBalances } from '../../state/wallet/hooks';
+
+import { LightCard } from '../Card';
+import { Moon, Sun } from 'react-feather';
+import Row, { RowFixed } from '../Row';
+import Web3Status from '../Web3Status';
+//import { ClaimButton, ClaimIcon } from 'components/Button';
+
+const HeaderFrame = styled.div`
   width: 100vw;
-  margin: 0.4rem auto;
-  padding: 0.4rem 1.6rem;
+  margin: 0.8rem auto;
+  padding: 0.8rem 1.6rem;
   z-index: 2;
   display: grid;
   grid-template-columns: 120px 1fr 120px;
@@ -29,21 +35,21 @@ const HeaderFrame = styled.header`
     grid-template-columns: 60px 1fr 120px;
   `};
 
-  ${({ theme }) => theme.mediaWidth.upToMedium`
+  ${({ theme }) => theme.mediaWidth.upToSmall`
     grid-template-columns: 60px 1fr;
   `};
 
   ${({ theme }) => theme.mediaWidth.upToExtraSmall`
     padding: 0.5rem 1rem;
   `}
-`
+`;
 
 const HeaderControls = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-self: flex-end;
-`
+`;
 
 const HeaderElement = styled.div`
   display: flex;
@@ -51,15 +57,15 @@ const HeaderElement = styled.div`
   gap: 8px;
 
   ${({ theme }) => theme.mediaWidth.upToMedium`
-    flex-direction: row-reverse;
+   flex-direction: row-reverse;
     align-items: center;
   `};
-`
+`;
 
 const HeaderElementWrap = styled.div`
   display: flex;
   align-items: center;
-`
+`;
 
 const HeaderRow = styled(RowFixed)`
   display: flex;
@@ -68,43 +74,41 @@ const HeaderRow = styled(RowFixed)`
   ${({ theme }) => theme.mediaWidth.upToMedium`
     width: 100%;
   `};
-`
+`;
 
-const NavlLinks = styled(Row)`
+const HeaderLinks = styled(Row)`
   width: auto;
   margin: 0 auto;
   padding: 0.3rem;
-  flex-wrap: wrap;
   justify-content: center;
   border-radius: 0.8rem;
   box-shadow: rgba(0, 0, 0, 0.01) 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 4px 8px, rgba(0, 0, 0, 0.04) 0px 16px 24px,
     rgba(0, 0, 0, 0.01) 0px 24px 32px;
   background-color: ${({ theme }) => theme.bg1};
 
-  ${({ theme }) => theme.mediaWidth.upToLarge`
+  ${({ theme }) => theme.mediaWidth.upToExtraLarge`
     margin: 0;
-    margin-left: 4%;
     margin-right: auto;
   `};
 
   ${({ theme }) => theme.mediaWidth.upToMedium`
     position: fixed;
-    margin-left: 0;
     bottom: 0;
-    padding: 0.6rem;
+    padding: .5rem;
     width: 100%;
-    left: 0%;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 0;
+    border-top: 1px solid ${({ theme }) => theme.bg3};
   `};
-`
+`;
 
 const AccountElement = styled.div<{ active: boolean }>`
   display: flex;
   flex-direction: row;
   align-items: center;
-  background-color: ${({ theme, active }) => (!active ? theme.bg1 : theme.bg2)};
-  border-radius: 0.7rem;
+  background-color: ${({ theme, active }) => (!active ? theme.bg1 : theme.bg3)};
+  border-radius: 0.8rem;
   white-space: nowrap;
   width: 100%;
   cursor: pointer;
@@ -114,23 +118,19 @@ const AccountElement = styled.div<{ active: boolean }>`
   :focus {
     border: 1px solid blue;
   }
-`
+`;
 
-const HideSmall = styled.div`
-  ${({ theme }) => theme.mediaWidth.upToExtraSmall`
+const HideSmall = styled.span`
+  ${({ theme }) => theme.mediaWidth.upToSmall`
     display: none;
   `};
-`
+`;
 
 const NetworkCard = styled(LightCard)`
-  border-radius: 0.7rem;
+  border-radius: 0.8rem;
   padding: 8px 12px;
   box-shadow: rgba(0, 0, 0, 0.01) 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 4px 8px, rgba(0, 0, 0, 0.04) 0px 16px 24px,
     rgba(0, 0, 0, 0.01) 0px 24px 32px;
-  word-break: keep-all;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
 
   ${({ theme }) => theme.mediaWidth.upToSmall`
     margin: 0;
@@ -140,12 +140,13 @@ const NetworkCard = styled(LightCard)`
     text-overflow: ellipsis;
     flex-shrink: 1;
   `};
+`;
 
-  img {
-    max-width: 1.2rem;
-    margin-right: 1%;
-  }
-`
+const BalanceText = styled(Text)`
+  ${({ theme }) => theme.mediaWidth.upToExtraSmall`
+    display: none;
+  `};
+`;
 
 const Title = styled.a`
   display: flex;
@@ -159,21 +160,16 @@ const Title = styled.a`
   :hover {
     cursor: pointer;
   }
-`
+`;
 
 const Icon = styled.div`
-  width: 6rem;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
   :hover {
     transform: scale(1.1);
   }
-`
+`;
 
-const LogoImage = styled.img`
-  width: 100%;
-`
-
-const activeClassName = 'ACTIVE'
+const activeClassName = 'ACTIVE';
 
 const StyledNavLink = styled(NavLink).attrs({
   activeClassName,
@@ -189,112 +185,96 @@ const StyledNavLink = styled(NavLink).attrs({
   width: fit-content;
   padding: 0.3rem 0.6rem;
   font-weight: 500;
-  transition: 0.12s;
+  transition: 0.3s;
 
   &:not(:last-child) {
     margin-right: 0.16rem;
   }
 
-  &:hover {
-    color: ${({ theme }) => theme.text1};
-  }
-
   &.${activeClassName} {
-    color: ${({ theme }) => theme.white1};
-    background-color: ${({ theme }) => theme.primary2};
-  }
-
-  ${({ theme }) => theme.mediaWidth.upToMedium`
-    max-width: 10rem;
-    width: 100%;
-    margin: .1rem;
-    padding: 0.4rem 6%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid ${({ theme }) => theme.bg3};
-    font-size: 1.1em;
-  `};
-`
-
-const StyledExternalLink = styled.a`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  text-decoration: none;
-  font-size: 0.9rem;
-  border-radius: 12px;
-  width: fit-content;
-  padding: 0.3rem 0.5rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text2};
-  transition: 0.2s;
-  word-break: keep-all;
-  white-space: nowrap;
-
-  &:not(:last-child) {
-    margin-right: 0.14rem;
-  }
-
-  &:hover {
     color: ${({ theme }) => theme.text1};
+    background-color: ${({ theme }) => theme.bg3};
   }
 
-  .name {
-    margin-right: 0.1rem;
+  :hover,
+  :focus {
+    color: ${({ theme }) => darken(0.1, theme.text1)};
   }
 
-  ${({ theme }) => theme.mediaWidth.upToMedium`
-    max-width: 10rem;
-    width: 100%;
-    margin: .1rem;
-    padding: 0.4rem 6%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  ${({ theme }) => theme.mediaWidth.upToSmall`
+    border-radius: 8px;
+    padding: 0.3rem 7%;
     border: 1px solid ${({ theme }) => theme.bg3};
-    font-size: 1.1em;
+
+    &:not(:last-child) {
+      margin-right: 2%;
+    }
   `};
-`
+`;
+
+export const StyledMenuButton = styled.button`
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: transparent;
+  margin: 0;
+  padding: 0;
+  height: 35px;
+  background-color: ${({ theme }) => theme.bg3};
+  margin-left: 8px;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: rgba(0, 0, 0, 0.01) 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 4px 8px, rgba(0, 0, 0, 0.04) 0px 16px 24px,
+    rgba(0, 0, 0, 0.01) 0px 24px 32px;
+
+  :hover,
+  :focus {
+    cursor: pointer;
+    outline: none;
+    background-color: ${({ theme }) => theme.bg4};
+  }
+
+  svg {
+    margin-top: 2px;
+  }
+  > * {
+    stroke: ${({ theme }) => theme.text1};
+  }
+`;
+
+const NETWORK_LABELS: { [chainId in ChainId]?: string } = {
+  [ChainId.LUMIO]: 'lumio',
+  [ChainId.ROPSTEN]: 'Ropsten',
+  [ChainId.GÖRLI]: 'Goerli',
+  [ChainId.KOVAN]: 'Kovan',
+  [ChainId.DAILY]: 'Daily',
+  [ChainId.TDAILY]: 'tDaily',
+};
 
 export default function Header() {
-  const { account, chainId } = useActiveWeb3React()
-  const { t } = useTranslation()
-  const { logo: logoUrl, navigationLinks } = useAppState()
-
-  const NetworkInfo = () => {
-    if (!chainId) return
-    // @ts-ignore
-    const networkConfig = networks[chainId]
-    // @ts-ignore
-    const networkImage = CURRENCY[chainId]
-    return (
-      networkConfig?.name && (
-        <NetworkCard title={`${networkImage.name} network`}>
-          {!!networkImage && <img src={networkImage} style={{ marginRight: '0.4rem' }} alt="network logo" />}
-          {networkConfig.name}
-        </NetworkCard>
-      )
-    )
-  }
+  const { account, chainId } = useActiveWeb3React();
+  const { t } = useTranslation();
+  const userEthBalance = useETHBalances(account ? [account] : [])?.[account ?? ''];
+  const [darkMode, toggleDarkMode] = useDarkModeManager();
 
   return (
     <HeaderFrame>
       <HeaderRow>
         <Title href=".">
           <Icon>
-            <LogoImage src={logoUrl || TempLogo} alt="logo" />
+            <img width={'55px'} src={darkMode ? LogoDark : Logo} alt="logo" />
           </Icon>
         </Title>
       </HeaderRow>
 
-      <NavlLinks>
-        <StyledNavLink id="header-swap-nav-link" to={'/swap'}>
+      <HeaderLinks>
+        <StyledNavLink id={`swap-nav-link`} to={'/swap'}>
           {t('swap')}
         </StyledNavLink>
         <StyledNavLink
-          id="header-pool-nav-link"
-          to="/pool"
+          id={`pool-nav-link`}
+          to={'/pool'}
           isActive={(match, { pathname }) =>
             Boolean(match) ||
             pathname.startsWith('/add') ||
@@ -305,27 +285,36 @@ export default function Header() {
         >
           {t('pool')}
         </StyledNavLink>
-
-        {Boolean(navigationLinks.length) &&
-          navigationLinks.map((item: { source: string; name: string }, index) => (
-            <StyledExternalLink href={item.source} key={index} target="_blank">
-              <span className="name">{item.name}</span> <RiArrowRightUpLine />
-            </StyledExternalLink>
-          ))}
-      </NavlLinks>
+      </HeaderLinks>
 
       <HeaderControls>
         <HeaderElement>
-          <HideSmall>{NetworkInfo()}</HideSmall>
+          <HideSmall>
+            {chainId && NETWORK_LABELS[chainId] && (
+              <NetworkCard title={NETWORK_LABELS[chainId]}>{NETWORK_LABELS[chainId]}</NetworkCard>
+            )}
+          </HideSmall>
+          {/*
+          <ClaimButton onClick={() => window.open('https://claim.lumio.io/')}>
+            <ClaimIcon />
+            <HideSmall>Claim Gas</HideSmall>
+          </ClaimButton>
+          */}
           <AccountElement active={!!account} style={{ pointerEvents: 'auto' }}>
+            {account && userEthBalance ? (
+              <BalanceText style={{ flexShrink: 0 }} pl="0.75rem" pr="0.5rem" fontWeight={500}>
+                {userEthBalance?.toSignificant(4)} DLY
+              </BalanceText>
+            ) : null}
             <Web3Status />
           </AccountElement>
         </HeaderElement>
-
         <HeaderElementWrap>
-          <Menu />
+          <StyledMenuButton onClick={toggleDarkMode}>
+            {darkMode ? <Moon size={20} /> : <Sun size={20} />}
+          </StyledMenuButton>
         </HeaderElementWrap>
       </HeaderControls>
     </HeaderFrame>
-  )
+  );
 }

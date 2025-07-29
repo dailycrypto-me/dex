@@ -1,30 +1,28 @@
-import React, { useContext, useMemo } from 'react'
-import styled, { ThemeContext } from 'styled-components'
-import { Pair } from 'sdk'
-import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { SwapPoolTabs } from 'components/NavigationTabs'
-import AppBody from '../AppBody'
-import FullPositionCard from 'components/PositionCard'
-import { useTokenBalancesWithLoadingIndicator } from 'state/wallet/hooks'
-import { TYPE, HideSmall } from 'theme'
-import { Text } from 'rebass'
-import Card from 'components/Card'
-import { RowBetween, RowFixed } from 'components/Row'
-import { ButtonPrimary, ButtonSecondary } from 'components/Button'
-import { AutoColumn } from 'components/Column'
-import { useAppState } from 'state/application/hooks'
-import { useActiveWeb3React } from 'hooks'
-import { useBaseCurrency } from 'hooks/useCurrency'
-import { usePairs } from 'data/Reserves'
-import { toV2LiquidityToken, useTrackedTokenPairs } from 'state/user/hooks'
-import { Dots } from 'components/swap/styleds'
+import React, { useContext, useMemo } from 'react';
+import styled, { ThemeContext } from 'styled-components';
+import { Pair } from '@uniswap/sdk';
+import { Link } from 'react-router-dom';
+import { SwapPoolTabs } from '../../components/NavigationTabs';
+import AppBody from '../AppBody';
+import FullPositionCard from '../../components/PositionCard';
+import { useTokenBalancesWithLoadingIndicator } from '../../state/wallet/hooks';
+import { TYPE, HideSmall } from '../../theme';
+import { Text } from 'rebass';
+import Card from '../../components/Card';
+import { RowBetween, RowFixed } from '../../components/Row';
+import { ButtonPrimary } from '../../components/Button';
+import { AutoColumn } from '../../components/Column';
+
+import { useActiveWeb3React } from '../../hooks';
+import { usePairs } from '../../data/Reserves';
+import { toV2LiquidityToken, useTrackedTokenPairs } from '../../state/user/hooks';
+import { Dots } from '../../components/swap/styleds';
 
 const PageWrapper = styled(AutoColumn)`
   max-width: 640px;
   width: 100%;
   padding: 1rem;
-`
+`;
 
 const TitleRow = styled(RowBetween)`
   ${({ theme }) => theme.mediaWidth.upToSmall`
@@ -33,7 +31,7 @@ const TitleRow = styled(RowBetween)`
     width: 100%;
     flex-direction: column-reverse;
   `};
-`
+`;
 
 const ButtonRow = styled(RowFixed)`
   gap: 8px;
@@ -42,14 +40,14 @@ const ButtonRow = styled(RowFixed)`
     flex-direction: row-reverse;
     justify-content: space-between;
   `};
-`
+`;
 
 const ResponsiveButtonPrimary = styled(ButtonPrimary)`
   width: fit-content;
   ${({ theme }) => theme.mediaWidth.upToSmall`
     width: 48%;
   `};
-`
+`;
 
 const EmptyProposals = styled.div`
   border: 1px solid ${({ theme }) => theme.text4};
@@ -59,47 +57,42 @@ const EmptyProposals = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-`
+`;
 
 export default function Pool() {
-  const { t } = useTranslation()
-  const theme = useContext(ThemeContext)
-  const { account } = useActiveWeb3React()
-  const { factory, pairHash } = useAppState()
-  const baseCurrency = useBaseCurrency()
+  const theme = useContext(ThemeContext);
+  const { account } = useActiveWeb3React();
 
   // fetch the user's balances of all tracked V2 LP tokens
-  const trackedTokenPairs = useTrackedTokenPairs()
-  const tokenPairsWithLiquidityTokens = useMemo(() => {
-    if (!factory || !pairHash) return []
-
-    return trackedTokenPairs.map((tokens) => ({
-      liquidityToken: toV2LiquidityToken(tokens, factory, pairHash),
-      tokens,
-    }))
-  }, [trackedTokenPairs, factory, pairHash])
+  const trackedTokenPairs = useTrackedTokenPairs();
+  const tokenPairsWithLiquidityTokens = useMemo(
+    () => trackedTokenPairs.map((tokens) => ({ liquidityToken: toV2LiquidityToken(tokens), tokens })),
+    [trackedTokenPairs]
+  );
   const liquidityTokens = useMemo(
     () => tokenPairsWithLiquidityTokens.map((tpwlt) => tpwlt.liquidityToken),
     [tokenPairsWithLiquidityTokens]
-  )
+  );
   const [v2PairsBalances, fetchingV2PairBalances] = useTokenBalancesWithLoadingIndicator(
     account ?? undefined,
     liquidityTokens
-  )
+  );
 
-  // fetch the reserves for all pools in which the user has a balance
+  // fetch the reserves for all V2 pools in which the user has a balance
   const liquidityTokensWithBalances = useMemo(
     () =>
       tokenPairsWithLiquidityTokens.filter(({ liquidityToken }) =>
         v2PairsBalances[liquidityToken.address]?.greaterThan('0')
       ),
     [tokenPairsWithLiquidityTokens, v2PairsBalances]
-  )
+  );
 
-  const v2Pairs = usePairs(liquidityTokensWithBalances.map(({ tokens }) => tokens))
+  const v2Pairs = usePairs(liquidityTokensWithBalances.map(({ tokens }) => tokens));
   const v2IsLoading =
-    fetchingV2PairBalances || v2Pairs?.length < liquidityTokensWithBalances.length || v2Pairs?.some((V2Pair) => !V2Pair)
-  const allV2PairsWithLiquidity = v2Pairs.map(([, pair]) => pair).filter((v2Pair): v2Pair is Pair => Boolean(v2Pair))
+    fetchingV2PairBalances ||
+    v2Pairs?.length < liquidityTokensWithBalances.length ||
+    v2Pairs?.some((V2Pair) => !V2Pair);
+  const allV2PairsWithLiquidity = v2Pairs.map(([, pair]) => pair).filter((v2Pair): v2Pair is Pair => Boolean(v2Pair));
 
   return (
     <AppBody>
@@ -107,22 +100,19 @@ export default function Pool() {
         <SwapPoolTabs active={'pool'} />
         <AutoColumn gap="lg" justify="center">
           <AutoColumn gap="lg" style={{ width: '100%' }}>
-            <TitleRow padding={'0'}>
+            <TitleRow style={{ marginTop: '1rem' }} padding={'0'}>
               <HideSmall>
-                <TYPE.mediumHeader style={{ justifySelf: 'flex-start' }}>{t('yourLiquidity')}</TYPE.mediumHeader>
+                <TYPE.mediumHeader style={{ justifySelf: 'flex-start' }}>
+                  Your liquidity
+                </TYPE.mediumHeader>
               </HideSmall>
               <ButtonRow>
-                <ResponsiveButtonPrimary as={Link} padding="6px 10px" to={`/create/${baseCurrency?.name}`}>
-                  {t('createPair')}
+                <ResponsiveButtonPrimary as={Link} padding="6px 10px" to="/create/ETH">
+                  Create a pair
                 </ResponsiveButtonPrimary>
-                <ResponsiveButtonPrimary
-                  id="join-pool-button"
-                  as={Link}
-                  padding="6px 10px"
-                  to={`/add/${baseCurrency?.name}`}
-                >
+                <ResponsiveButtonPrimary id="join-pool-button" as={Link} padding="6px 10px" to="/add/ETH">
                   <Text fontWeight={500} fontSize={16}>
-                    {t('addLiquidity')}
+                    Add Liquidity
                   </Text>
                 </ResponsiveButtonPrimary>
               </ButtonRow>
@@ -131,13 +121,13 @@ export default function Pool() {
             {!account ? (
               <Card padding="40px">
                 <TYPE.body color={theme.text3} textAlign="center">
-                  {t('connectToWalletForLiquidity')}
+                  Connect to a wallet to view your liquidity.
                 </TYPE.body>
               </Card>
             ) : v2IsLoading ? (
               <EmptyProposals>
                 <TYPE.body color={theme.text3} textAlign="center">
-                  <Dots>{t('loading')}</Dots>
+                  <Dots>Loading</Dots>
                 </TYPE.body>
               </EmptyProposals>
             ) : allV2PairsWithLiquidity?.length > 0 ? (
@@ -147,20 +137,15 @@ export default function Pool() {
                 ))}
               </>
             ) : (
-              <>
-                <EmptyProposals>
-                  <TYPE.body color={theme.text3} textAlign="center">
-                    {t('noLiquidityFound')}
-                  </TYPE.body>
-                </EmptyProposals>
-                <ButtonSecondary as={Link} to={`/find`}>
-                  {t('findManually')}
-                </ButtonSecondary>
-              </>
+              <EmptyProposals>
+                <TYPE.body color={theme.text3} textAlign="center">
+                  No Liquidity found
+                </TYPE.body>
+              </EmptyProposals>
             )}
           </AutoColumn>
         </AutoColumn>
       </PageWrapper>
     </AppBody>
-  )
+  );
 }

@@ -1,10 +1,9 @@
-import React from 'react'
-import styled from 'styled-components'
-import { useActivePopups, useAppState } from 'state/application/hooks'
-import { AppState } from 'state'
-import { useSelector } from 'react-redux'
-import { AutoColumn } from '../Column'
-import PopupItem from './PopupItem'
+import React from 'react';
+import styled from 'styled-components';
+import { useActivePopups } from '../../state/application/hooks';
+import { AutoColumn } from '../Column';
+import PopupItem from './PopupItem';
+import { useURLWarningVisible } from '../../state/user/hooks';
 
 const MobilePopupWrapper = styled.div<{ height: string | number }>`
   position: relative;
@@ -17,7 +16,7 @@ const MobilePopupWrapper = styled.div<{ height: string | number }>`
   ${({ theme }) => theme.mediaWidth.upToSmall`
     display: block;
   `};
-`
+`;
 
 const MobilePopupInner = styled.div`
   height: 99%;
@@ -29,11 +28,11 @@ const MobilePopupInner = styled.div`
   ::-webkit-scrollbar {
     display: none;
   }
-`
+`;
 
-const FixedPopupColumn = styled(AutoColumn)<{ noPadding: boolean; extraPadding: boolean }>`
+const FixedPopupColumn = styled(AutoColumn)<{ extraPadding: boolean }>`
   position: fixed;
-  top: ${({ noPadding, extraPadding }) => (noPadding ? '22px' : extraPadding ? '108px' : '88px')};
+  top: ${({ extraPadding }) => (extraPadding ? '108px' : '88px')};
   right: 1rem;
   max-width: 355px !important;
   width: 100%;
@@ -42,21 +41,17 @@ const FixedPopupColumn = styled(AutoColumn)<{ noPadding: boolean; extraPadding: 
   ${({ theme }) => theme.mediaWidth.upToSmall`
     display: none;
   `};
-`
+`;
 
 export default function Popups() {
-  const { admin } = useAppState()
-  const activePopups = useActivePopups()
+  // get all popups
+  const activePopups = useActivePopups();
 
-  const appManagement = useSelector<AppState, AppState['application']['appManagement']>(
-    (state) => state.application.appManagement
-  )
-
-  const noDomainInfo = !admin
+  const urlWarningActive = useURLWarningVisible();
 
   return (
     <>
-      <FixedPopupColumn gap="20px" noPadding={appManagement || noDomainInfo} extraPadding={false}>
+      <FixedPopupColumn gap="20px" extraPadding={urlWarningActive}>
         {activePopups.map((item) => (
           <PopupItem key={item.key} content={item.content} popKey={item.key} removeAfterMs={item.removeAfterMs} />
         ))}
@@ -72,5 +67,5 @@ export default function Popups() {
         </MobilePopupInner>
       </MobilePopupWrapper>
     </>
-  )
+  );
 }

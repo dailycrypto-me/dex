@@ -1,20 +1,17 @@
-import { Trade, TradeType } from 'sdk'
-import React, { useContext, useMemo } from 'react'
-import { ArrowDown, AlertTriangle } from 'react-feather'
-import { useTranslation } from 'react-i18next'
-import { Text } from 'rebass'
-import { ThemeContext } from 'styled-components'
-import { Field } from 'state/swap/actions'
-import { useAppState } from 'state/application/hooks'
-import { useBaseCurrency } from 'hooks/useCurrency'
-import { TYPE } from 'theme'
-import { ButtonPrimary, ButtonAdd } from '../Button'
-import { isAddress, shortenAddress } from 'utils'
-import { computeSlippageAdjustedAmounts, computeTradePriceBreakdown, warningSeverity } from 'utils/prices'
-import { AutoColumn } from '../Column'
-import CurrencyLogo from '../CurrencyLogo'
-import { RowBetween, RowFixed } from '../Row'
-import { TruncatedText, SwapShowAcceptChanges } from './styleds'
+import { Trade, TradeType } from '@uniswap/sdk';
+import React, { useContext, useMemo } from 'react';
+import { ArrowDown, AlertTriangle } from 'react-feather';
+import { Text } from 'rebass';
+import { ThemeContext } from 'styled-components';
+import { Field } from '../../state/swap/actions';
+import { TYPE } from '../../theme';
+import { ButtonPrimary } from '../Button';
+import { isAddress, shortenAddress } from '../../utils';
+import { computeSlippageAdjustedAmounts, computeTradePriceBreakdown, warningSeverity } from '../../utils/prices';
+import { AutoColumn } from '../Column';
+import CurrencyLogo from '../CurrencyLogo';
+import { RowBetween, RowFixed } from '../Row';
+import { TruncatedText, SwapShowAcceptChanges } from './styleds';
 
 export default function SwapModalHeader({
   trade,
@@ -23,60 +20,20 @@ export default function SwapModalHeader({
   showAcceptChanges,
   onAcceptChanges,
 }: {
-  trade: Trade
-  allowedSlippage: number
-  recipient: string | null
-  showAcceptChanges: boolean
-  onAcceptChanges: () => void
+  trade: Trade;
+  allowedSlippage: number;
+  recipient: string | null;
+  showAcceptChanges: boolean;
+  onAcceptChanges: () => void;
 }) {
-  const { t } = useTranslation()
-  const { totalFee } = useAppState()
-  const baseCurrency = useBaseCurrency()
   const slippageAdjustedAmounts = useMemo(
-    () => computeSlippageAdjustedAmounts(trade, allowedSlippage, baseCurrency),
-    [trade, allowedSlippage, baseCurrency]
-  )
-  const { priceImpactWithoutFee } = useMemo(
-    () => computeTradePriceBreakdown(baseCurrency, trade, totalFee),
-    [trade, totalFee, baseCurrency]
-  )
-  const priceImpactSeverity = warningSeverity(priceImpactWithoutFee)
+    () => computeSlippageAdjustedAmounts(trade, allowedSlippage),
+    [trade, allowedSlippage]
+  );
+  const { priceImpactWithoutFee } = useMemo(() => computeTradePriceBreakdown(trade), [trade]);
+  const priceImpactSeverity = warningSeverity(priceImpactWithoutFee);
 
-  const theme = useContext(ThemeContext)
-
-  // @ts-ignore
-  const showAddButton = !!trade?.outputAmount?.token?.address
-  const addOutputToMetamask = () => {
-    const {
-      address,
-      symbol,
-      decimals,
-      logoURI,
-      // @ts-ignore
-    } = trade?.outputAmount?.token
-    try {
-      window.ethereum
-        ?.request?.({
-          method: 'wallet_watchAsset',
-          params: {
-            type: 'ERC20',
-            options: {
-              address,
-              symbol,
-              decimals,
-              image: logoURI,
-            },
-          },
-        })
-        .then((wasAdded: boolean) => {
-          if (wasAdded) {
-            /* ok */
-          }
-        })
-    } catch (error) {
-      console.log(error)
-    }
-  }
+  const theme = useContext(ThemeContext);
 
   return (
     <AutoColumn gap={'md'} style={{ marginTop: '20px' }}>
@@ -123,15 +80,6 @@ export default function SwapModalHeader({
           </Text>
         </RowFixed>
       </RowBetween>
-      {showAddButton && (
-        <div>
-          <ButtonAdd
-            style={{ margin: '0 auto' }}
-            onClick={addOutputToMetamask}
-            title={t('addTokenToMetamask', { tokenSymbol: trade.outputAmount.currency.symbol })}
-          />
-        </div>
-      )}
       {showAcceptChanges ? (
         <SwapShowAcceptChanges justify="flex-start" gap={'0px'}>
           <RowBetween>
@@ -143,7 +91,7 @@ export default function SwapModalHeader({
               style={{ padding: '.5rem', width: 'fit-content', fontSize: '0.825rem', borderRadius: '12px' }}
               onClick={onAcceptChanges}
             >
-              {t('accept')}
+              Accept
             </ButtonPrimary>
           </RowBetween>
         </SwapShowAcceptChanges>
@@ -151,30 +99,30 @@ export default function SwapModalHeader({
       <AutoColumn justify="flex-start" gap="sm" style={{ padding: '12px 0 0 0px' }}>
         {trade.tradeType === TradeType.EXACT_INPUT ? (
           <TYPE.italic textAlign="left" style={{ width: '100%' }}>
-            {t('outputEstimatedYouReceiveAtLeast')}{' '}
+            {`Output is estimated. You will receive at least `}
             <b>
               {slippageAdjustedAmounts[Field.OUTPUT]?.toSignificant(6)} {trade.outputAmount.currency.symbol}
-            </b>{' '}
-            {t('orTransactionWillRevert')}
+            </b>
+            {' or the transaction will revert.'}
           </TYPE.italic>
         ) : (
           <TYPE.italic textAlign="left" style={{ width: '100%' }}>
-            {t('inputEstimatedYouSellAtMost')}{' '}
+            {`Input is estimated. You will sell at most `}
             <b>
               {slippageAdjustedAmounts[Field.INPUT]?.toSignificant(6)} {trade.inputAmount.currency.symbol}
-            </b>{' '}
-            {t('orTransactionWillRevert')}
+            </b>
+            {' or the transaction will revert.'}
           </TYPE.italic>
         )}
       </AutoColumn>
       {recipient !== null ? (
         <AutoColumn justify="flex-start" gap="sm" style={{ padding: '12px 0 0 0px' }}>
           <TYPE.main>
-            {t('outputWillSentTo')}{' '}
+            Output will be sent to{' '}
             <b title={recipient}>{isAddress(recipient) ? shortenAddress(recipient) : recipient}</b>
           </TYPE.main>
         </AutoColumn>
       ) : null}
     </AutoColumn>
-  )
+  );
 }

@@ -1,80 +1,29 @@
-import React, { useContext } from 'react'
-import { AlertCircle, CheckCircle } from 'react-feather'
-import styled, { ThemeContext } from 'styled-components'
-import { useActiveWeb3React } from 'hooks'
-import { Trans } from 'react-i18next'
-import { TYPE } from 'theme'
-import { ExternalLink } from 'theme/components'
-import { getExplorerLink } from 'utils'
-import { AutoColumn } from '../Column'
-import { AutoRow } from '../Row'
-import { TokenAmount, Trade } from 'sdk'
-import { WrappedTokenInfo } from 'state/lists/hooks'
-import { TokenInfo } from '@uniswap/token-lists'
+import React, { useContext } from 'react';
+import { AlertCircle, CheckCircle } from 'react-feather';
+import styled, { ThemeContext } from 'styled-components';
+import { useActiveWeb3React } from '../../hooks';
+import { TYPE } from '../../theme';
+import { ExternalLink } from '../../theme/components';
+import { getEtherscanLink } from '../../utils';
+import { AutoColumn } from '../Column';
+import { AutoRow } from '../Row';
 
 const RowNoFlex = styled(AutoRow)`
   flex-wrap: nowrap;
-`
-
-const LinkButton = styled.a`
-  color: ${({ theme }) => theme.blue2};
-  text-decoration: none;
-
-  :hover,
-  :focus {
-    cursor: pointer;
-    color: ${({ theme }) => theme.blue1};
-  }
-`
+`;
 
 export default function TransactionPopup({
   hash,
   success,
   summary,
-  trade,
 }: {
-  hash: string
-  success?: boolean
-  summary?: string
-  trade?: Trade
+  hash: string;
+  success?: boolean;
+  summary?: string;
 }) {
-  const { chainId } = useActiveWeb3React()
-  const isMetamask = window.ethereum && window.ethereum.isMetaMask
+  const { chainId } = useActiveWeb3React();
 
-  const theme = useContext(ThemeContext)
-
-  const withRecipient = summary?.match(' to ')
-  const token =
-    trade?.outputAmount instanceof TokenAmount &&
-    trade?.outputAmount?.token instanceof WrappedTokenInfo &&
-    trade?.outputAmount?.token
-
-  const showAddTokenButton = isMetamask && !withRecipient
-
-  const addTokenToMetamask = ({ address, symbol, decimals, logoURI = '' }: TokenInfo) => {
-    try {
-      window.ethereum
-        ?.request?.({
-          method: 'wallet_watchAsset',
-          params: {
-            type: 'ERC20',
-            options: {
-              address,
-              symbol,
-              decimals,
-              image: logoURI,
-            },
-          },
-        })
-        .then((wasAdded: boolean) => {
-          if (wasAdded) {
-            /* ok */
-          }
-        })
-    } catch (error) {
-      console.log(error)
-    }
-  }
+  const theme = useContext(ThemeContext);
 
   return (
     <RowNoFlex>
@@ -83,15 +32,8 @@ export default function TransactionPopup({
       </div>
       <AutoColumn gap="8px">
         <TYPE.body fontWeight={500}>{summary ?? 'Hash: ' + hash.slice(0, 8) + '...' + hash.slice(58, 65)}</TYPE.body>
-        {showAddTokenButton && !!token && (
-          <LinkButton theme={theme} onClick={() => addTokenToMetamask(token.tokenInfo)}>
-            <Trans i18nKey="addTokenToMetamask" values={{ tokenSymbol: token.tokenInfo.symbol }}>
-              Add token to Metamask
-            </Trans>
-          </LinkButton>
-        )}
-        {chainId && <ExternalLink href={getExplorerLink(chainId, hash, 'transaction')}>View in Explorer</ExternalLink>}
+        {chainId && <ExternalLink href={getEtherscanLink(chainId, hash, 'transaction')}>View in Explorer</ExternalLink>}
       </AutoColumn>
     </RowNoFlex>
-  )
+  );
 }

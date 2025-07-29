@@ -1,27 +1,21 @@
-import { Trade, TradeType } from 'sdk'
-import React, { useContext } from 'react'
-import { useTranslation } from 'react-i18next'
-import { ThemeContext } from 'styled-components'
-import { Field } from 'state/swap/actions'
-import { useAppState } from 'state/application/hooks'
-import { useUserSlippageTolerance } from 'state/user/hooks'
-import { useBaseCurrency } from 'hooks/useCurrency'
-import { TYPE } from 'theme'
-import { computeSlippageAdjustedAmounts, computeTradePriceBreakdown } from 'utils/prices'
-import { AutoColumn } from '../Column'
-import QuestionHelper from '../QuestionHelper'
-import { RowBetween, RowFixed } from '../Row'
-import FormattedPriceImpact from './FormattedPriceImpact'
-import SwapRoute from './SwapRoute'
+import { Trade, TradeType } from '@uniswap/sdk';
+import React, { useContext } from 'react';
+import { ThemeContext } from 'styled-components';
+import { Field } from '../../state/swap/actions';
+import { useUserSlippageTolerance } from '../../state/user/hooks';
+import { TYPE } from '../../theme';
+import { computeSlippageAdjustedAmounts, computeTradePriceBreakdown } from '../../utils/prices';
+import { AutoColumn } from '../Column';
+import QuestionHelper from '../QuestionHelper';
+import { RowBetween, RowFixed } from '../Row';
+import FormattedPriceImpact from './FormattedPriceImpact';
+import SwapRoute from './SwapRoute';
 
 function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippage: number }) {
-  const theme = useContext(ThemeContext)
-  const { t } = useTranslation()
-  const { totalFee } = useAppState()
-  const baseCurrency = useBaseCurrency()
-  const { priceImpactWithoutFee, realizedLPFee } = computeTradePriceBreakdown(baseCurrency, trade, totalFee)
-  const isExactIn = trade.tradeType === TradeType.EXACT_INPUT
-  const slippageAdjustedAmounts = computeSlippageAdjustedAmounts(trade, allowedSlippage, baseCurrency)
+  const theme = useContext(ThemeContext);
+  const { priceImpactWithoutFee, realizedLPFee } = computeTradePriceBreakdown(trade);
+  const isExactIn = trade.tradeType === TradeType.EXACT_INPUT;
+  const slippageAdjustedAmounts = computeSlippageAdjustedAmounts(trade, allowedSlippage);
 
   return (
     <>
@@ -29,9 +23,9 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
         <RowBetween>
           <RowFixed>
             <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
-              {isExactIn ? t('minimumReceived') : t('maximumSold')}
+              {isExactIn ? 'Minimum received' : 'Maximum sold'}
             </TYPE.black>
-            <QuestionHelper text={t('minimumReceivedDescription')} />
+            <QuestionHelper text="Your transaction will revert if there is a large, unfavorable price movement before it is confirmed." />
           </RowFixed>
           <RowFixed>
             <TYPE.black color={theme.text1} fontSize={14}>
@@ -46,9 +40,9 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
         <RowBetween>
           <RowFixed>
             <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
-              {t('priceImpact')}
+              Price Impact
             </TYPE.black>
-            <QuestionHelper text={t('priceImpactDescription')} />
+            <QuestionHelper text="The difference between the market price and estimated price due to trade size." />
           </RowFixed>
           <FormattedPriceImpact priceImpact={priceImpactWithoutFee} />
         </RowBetween>
@@ -56,9 +50,9 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
         <RowBetween>
           <RowFixed>
             <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
-              {t('liquidityProviderFee')}
+              Liquidity Provider Fee
             </TYPE.black>
-            <QuestionHelper text={t('liquidityProviderFeeDescription')} />
+            <QuestionHelper text="A portion of each trade (0.30%) goes to liquidity providers as a protocol incentive." />
           </RowFixed>
           <TYPE.black fontSize={14} color={theme.text1}>
             {realizedLPFee ? `${realizedLPFee.toSignificant(4)} ${trade.inputAmount.currency.symbol}` : '-'}
@@ -66,19 +60,19 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
         </RowBetween>
       </AutoColumn>
     </>
-  )
+  );
 }
 
 export interface AdvancedSwapDetailsProps {
-  trade?: Trade
+  trade?: Trade;
 }
 
 export function AdvancedSwapDetails({ trade }: AdvancedSwapDetailsProps) {
-  const theme = useContext(ThemeContext)
-  const { t } = useTranslation()
-  const [allowedSlippage] = useUserSlippageTolerance()
+  const theme = useContext(ThemeContext);
 
-  const showRoute = Boolean(trade && trade.route.path.length > 2)
+  const [allowedSlippage] = useUserSlippageTolerance();
+
+  const showRoute = Boolean(trade && trade.route.path.length > 2);
 
   return (
     <AutoColumn gap="0px">
@@ -90,9 +84,9 @@ export function AdvancedSwapDetails({ trade }: AdvancedSwapDetailsProps) {
               <RowBetween style={{ padding: '0 16px' }}>
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
-                    {t('route')}
+                    Route
                   </TYPE.black>
-                  <QuestionHelper text={t('routeDescription')} />
+                  <QuestionHelper text="Routing through these tokens resulted in the best price for your trade." />
                 </span>
                 <SwapRoute trade={trade} />
               </RowBetween>
@@ -101,5 +95,5 @@ export function AdvancedSwapDetails({ trade }: AdvancedSwapDetailsProps) {
         </>
       )}
     </AutoColumn>
-  )
+  );
 }
